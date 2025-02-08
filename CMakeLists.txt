@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 include_directories(include)
 
 # Server executable
-add_executable(Server src/main_server.cpp src/server.cpp src/scheduler.cpp src/logger.cpp)
+add_executable(Server src/main_server.cpp src/server.cpp src/scheduler.cpp src/logger.cpp src/security.cpp)
 target_link_libraries(Server pthread)
 
 # Client executable

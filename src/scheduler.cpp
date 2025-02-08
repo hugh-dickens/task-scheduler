@@ -23,7 +23,7 @@ void TaskScheduler::processTasks() {
 
         taskCondition.wait(lock, [this] {return !taskQueue.empty() || !running;});
 
-        if (!running) {break;}
+        if (!running) break;
 
         while (!taskQueue.empty()) {
             auto now = std::chrono::system_clock::now();
