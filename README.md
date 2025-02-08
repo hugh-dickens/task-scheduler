@@ -7,7 +7,7 @@ This project implements a **multi-threaded task scheduler** that receives tasks 
 - A **Server** that listens for client connections and forwards commands to the scheduler.
 - A **Client** that sends commands to be scheduled.
 
-The project supports **Linux, Windows (via WSL)**. However, tested on Windows via WSL running on Ubuntu 22.04.
+The project supports **Linux, Windows (via WSL)**. However, tested on Windows via WSL running on Ubuntu 22.04. It may work on other systems but this is not supported nor tested.
 
 ---
 
@@ -18,6 +18,7 @@ The project supports **Linux, Windows (via WSL)**. However, tested on Windows vi
 - ✅ Uses `std::system()` to run commands.
 - ✅ Designed for scalability with separate client and server binaries.
 - ✅ Logging system for executed tasks. 
+- ✅ Secure command execution (prevent dangerous commands by denying root execution). 
 
 ---
 
@@ -64,10 +65,6 @@ make
 ### Example Usage
 
 After running the Server then the Client, the terminal will prompt you for a command e.g. `ls`, and a delay e.g. `2s`
-
-### Future Improvements
-- Secure command execution (prevent dangerous commands). 
-- WebSocket integration for real-time task updates.
 
 ### License
 
