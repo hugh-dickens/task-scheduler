@@ -17,6 +17,7 @@ The project supports **Linux, Windows (via WSL)**. However, tested on Windows vi
 - ✅ Executes system commands (e.g., `ls`, `echo Hello`).
 - ✅ Uses `std::system()` to run commands.
 - ✅ Designed for scalability with separate client and server binaries.
+- ✅ Logging system for executed tasks. 
 
 ---
 
@@ -65,7 +66,6 @@ make
 After running the Server then the Client, the terminal will prompt you for a command e.g. `ls`, and a delay e.g. `2s`
 
 ### Future Improvements
-- Logging system for executed tasks. 
 - Secure command execution (prevent dangerous commands). 
 - WebSocket integration for real-time task updates.
 

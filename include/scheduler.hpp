@@ -1,6 +1,4 @@
-#ifndef SCHEDULER_HPP
-#define SCHEDULER_HPP
-
+#pragma once
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -9,6 +7,13 @@
 #include <queue>
 #include <chrono>
 #include <functional>
+
+class ITaskScheduler {
+public:
+    virtual void scheduleTask(const std::string& command, int delay) = 0;
+    virtual void run() = 0;
+    virtual ~ITaskScheduler() = default;
+};
 
 struct Task {
     std::string command;
@@ -19,16 +24,16 @@ struct Task {
     }
 };
 
-class TaskScheduler {
-    public:
-        void scheduleTask(const std::string& command, int delay);
-        void run();
+class TaskScheduler : public ITaskScheduler {
+public:
+    void scheduleTask(const std::string& command, int delay) override;
+    void run() override;
         
-    private:
+private:
     std::priority_queue<Task> taskQueue;
     std::mutex queueMutex;
-    std::condition_variable cv;
+    std::condition_variable taskCondition;
     bool running = true;
+
     void processTasks();
 };
-#endif // SCHEDULER_HPP

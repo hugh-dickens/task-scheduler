@@ -1,9 +1,8 @@
 #include "server.hpp"
 #include "scheduler.hpp"
 
-TaskScheduler scheduler;
 
-TaskServer::TaskServer(int port) {
+TaskServer::TaskServer(int port, ITaskScheduler& scheduler) : scheduler(scheduler) {
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1) {
         perror("Failed to create server socket");
@@ -56,7 +55,6 @@ void TaskServer::handleClient(int clientSocket) {
 
     if (bytesRead > 0) {
         std::string request(buffer, bytesRead);
-        std::cout << "Received task request: " << request << std::endl;
 
         // Parse request format: "command|delay"
         size_t delimiterPos = request.find('|');

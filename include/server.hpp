@@ -1,7 +1,4 @@
-// server.hpp
-#ifndef SERVER_HPP
-#define SERVER_HPP
-
+#pragma once
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -10,15 +7,16 @@
 #include <queue>
 #include <netinet/in.h>
 #include <unistd.h>
+#include "scheduler.hpp"
 
 class TaskServer {
     public:
-        TaskServer(int port);
+        TaskServer(int port, ITaskScheduler& scheduler);
         void start();
         
     private:
-        void handleClient(int clientSocket);
         int serverSocket;
-};
+        void handleClient(int clientSocket);
 
-#endif // SERVER_HPP
+        ITaskScheduler& scheduler;
+};

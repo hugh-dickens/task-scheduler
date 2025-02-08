@@ -1,6 +1,4 @@
-#ifndef CLIENT_HPP
-#define CLIENT_HPP
-
+#pragma once
 #include <iostream>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -14,5 +12,3 @@ class TaskClient {
     private:
         int clientSocket;
 };
-
-#endif // CLIENT_HPP
