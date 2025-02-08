@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include "scheduler.hpp"
+#include "logger.hpp"
 
 void TaskScheduler::scheduleTask(const std::string& command, int delay) {
     std::lock_guard<std::mutex> lock(queueMutex);
@@ -9,7 +10,7 @@ void TaskScheduler::scheduleTask(const std::string& command, int delay) {
     task.executeAt = std::chrono::system_clock::now() + std::chrono::seconds(delay);
     taskQueue.push(task);
 
-    cv.notify_one();
+    taskCondition.notify_one();
 }
 
 void TaskScheduler::run() {
@@ -19,27 +20,32 @@ void TaskScheduler::run() {
 void TaskScheduler::processTasks() {
     while (running) {
         std::unique_lock<std::mutex> lock(queueMutex);
-        if (taskQueue.empty()) {
-            cv.wait(lock); // Wait for tasks
-        }
+
+        taskCondition.wait(lock, [this] {return !taskQueue.empty() || !running;});
+
+        if (!running) {break;}
 
         while (!taskQueue.empty()) {
             auto now = std::chrono::system_clock::now();
-            if (taskQueue.top().executeAt <= now) {
-                Task task = taskQueue.top();
-                taskQueue.pop();
-                lock.unlock();
+            Task task = taskQueue.top();
 
-                std::cout << "Executing: " << task.command << std::endl;
-                int result = std::system(task.command.c_str());
-                if (result != 0) {
-                    std::cerr << "Command failed: " << task.command << std::endl;
-                }
-
-                lock.lock();
-            } else {
-                cv.wait_until(lock, taskQueue.top().executeAt);
+            if (task.executeAt > now) {
+                taskCondition.wait_until(lock, task.executeAt);
+                continue;
             }
+
+            taskQueue.pop();
+            lock.unlock();
+
+            int result = std::system(task.command.c_str());
+            if (result != 0) {
+                std::cerr << "Command failed: " << task.command << std::endl;
+                Logger::getInstance().log("Task failed: " + task.command);
+            } else {
+                Logger::getInstance().log("Task completed: " + task.command);
+            }
+
+            lock.lock();
         }
     }
 }
