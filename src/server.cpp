@@ -55,7 +55,6 @@ void TaskServer::handleClient(int clientSocket) {
 
     if (bytesRead > 0) {
         std::string request(buffer, bytesRead);
-        std::cout << "[DEBUG] Received task request: " << request << std::endl;
 
         // Parse request format: "command|delay"
         size_t delimiterPos = request.find('|');
