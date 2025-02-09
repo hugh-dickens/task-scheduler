@@ -23,8 +23,6 @@ void TaskScheduler::processTasks() {
 
         taskCondition.wait(lock, [this] { return !taskQueue.empty() || !running; });
 
-        if (!running) break;
-
         while (!taskQueue.empty()) {
             auto now = std::chrono::system_clock::now();
             Task task = taskQueue.top();
@@ -39,7 +37,7 @@ void TaskScheduler::processTasks() {
 
             int result = std::system(task.command.c_str());
             if (result != 0) {
-                std::cerr << "Command failed: " << task.command << std::endl;
+                std::cerr << "Command failed: " << task.command << "\n";
                 Logger::getInstance().log("Task failed: " + task.command);
             } else {
                 Logger::getInstance().log("Task completed: " + task.command);

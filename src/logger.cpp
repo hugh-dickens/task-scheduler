@@ -8,7 +8,7 @@ static const std::string TASK_SCHEDULER_PATH = "task_scheduler.log";
 Logger::Logger() {
     logFile.open(TASK_SCHEDULER_PATH, std::ios::app);
     if (!logFile) {
-        std::cerr << "Failed to open log file" << std::endl;
+        std::cerr << "Failed to open log file" << "\n";
     }
 }
 
@@ -18,7 +18,7 @@ Logger::~Logger() {
     }
 }
 
-Logger& Logger::getInstance() {
+auto Logger::getInstance() -> Logger& {
     static Logger instance;
     return instance;
 }
@@ -32,10 +32,10 @@ void Logger::log(const std::string& message) {
         // Remove newline character from time string
         timeStr.pop_back();
 
-        std::cout << "[" << timeStr << "] " << message << std::endl;
+        std::cout << "[" << timeStr << "] " << message << "\n";
         logFile << "[" << timeStr << "] " << message << "\n";
         logFile.flush();
     } else {
-        std::cerr << "Log file is not open" << std::endl;
+        std::cerr << "Log file is not open" << "\n";
     }
 }

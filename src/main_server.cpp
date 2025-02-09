@@ -2,7 +2,7 @@
 #include "security.hpp"
 #include "server.hpp"
 
-int main() {
+auto main() -> int {
     preventRootExecution();
 
     TaskScheduler scheduler;

@@ -37,7 +37,7 @@ The project supports **Linux, Windows (via WSL)**. However, tested on Windows vi
 ```sh
 # Install required dependencies
 sudo apt update
-sudo apt install -y build-essential cmake clang-format
+sudo apt install -y build-essential cmake clang-format clang-tidy cppcheck libgtest-dev
 ```
 
 ### **Windows (Using WSL)**
@@ -65,6 +65,33 @@ make
 ### Example Usage
 
 After running the Server then the Client, the terminal will prompt you for a command e.g. `ls`, and a delay e.g. `2s`
+
+### Static Analysis and Style
+
+This project used clang-tidy and cpp check for static analysis and style. To run:
+
+1. Build the Project
+```sh
+cmake -B build
+```
+
+2. Run ```clang-tidy```
+```sh
+cmake --build build --target run_clang_tidy
+```
+
+3. Run ```cppcheck```
+```sh
+cmake --build build --target run_cppcheck
+```
+
+### Code formatting
+
+Setup with a pre-commit hook, however, to manually run:
+
+```sh
+clang-format -i src/*.cpp include/*.hpp
+```
 
 ### License
 
