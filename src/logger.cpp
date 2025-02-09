@@ -1,6 +1,7 @@
 #include "logger.hpp"
-#include <iostream>
+
 #include <ctime>
+#include <iostream>
 
 static const std::string TASK_SCHEDULER_PATH = "task_scheduler.log";
 

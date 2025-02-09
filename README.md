@@ -37,7 +37,7 @@ The project supports **Linux, Windows (via WSL)**. However, tested on Windows vi
 ```sh
 # Install required dependencies
 sudo apt update
-sudo apt install -y build-essential cmake
+sudo apt install -y build-essential cmake clang-format
 ```
 
 ### **Windows (Using WSL)**

@@ -1,15 +1,15 @@
 #pragma once
+#include <chrono>
+#include <condition_variable>
+#include <functional>
 #include <iostream>
+#include <mutex>
+#include <queue>
 #include <thread>
 #include <vector>
-#include <mutex>
-#include <condition_variable>
-#include <queue>
-#include <chrono>
-#include <functional>
 
 class ITaskScheduler {
-public:
+   public:
     virtual void scheduleTask(const std::string& command, int delay) = 0;
     virtual void run() = 0;
     virtual ~ITaskScheduler() = default;
@@ -18,18 +18,16 @@ public:
 struct Task {
     std::string command;
     std::chrono::time_point<std::chrono::system_clock> executeAt;
-    
-    bool operator<(const Task& other) const {
-        return executeAt > other.executeAt;
-    }
+
+    bool operator<(const Task& other) const { return executeAt > other.executeAt; }
 };
 
 class TaskScheduler : public ITaskScheduler {
-public:
+   public:
     void scheduleTask(const std::string& command, int delay) override;
     void run() override;
-        
-private:
+
+   private:
     std::priority_queue<Task> taskQueue;
     std::mutex queueMutex;
     std::condition_variable taskCondition;

@@ -1,6 +1,6 @@
 #include "server.hpp"
-#include "scheduler.hpp"
 
+#include "scheduler.hpp"
 
 TaskServer::TaskServer(int port, ITaskScheduler& scheduler) : scheduler(scheduler) {
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -32,7 +32,7 @@ void TaskServer::start() {
         sockaddr_in clientAddr;
         socklen_t clientLen = sizeof(clientAddr);
         int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientLen);
-        
+
         if (clientSocket == -1) {
             perror("Failed to accept client connection");
             continue;
@@ -40,13 +40,13 @@ void TaskServer::start() {
 
         std::thread clientThread(&TaskServer::handleClient, this, clientSocket);
         clientThread.detach();
-    }    
+    }
 }
 
 void TaskServer::handleClient(int clientSocket) {
     char buffer[1024] = {0};
     int bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
-    
+
     if (bytesRead == -1) {
         perror("Failed to read from client socket");
         close(clientSocket);

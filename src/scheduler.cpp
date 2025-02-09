@@ -1,5 +1,7 @@
-#include <cstdlib>
 #include "scheduler.hpp"
+
+#include <cstdlib>
+
 #include "logger.hpp"
 
 void TaskScheduler::scheduleTask(const std::string& command, int delay) {
@@ -13,15 +15,13 @@ void TaskScheduler::scheduleTask(const std::string& command, int delay) {
     taskCondition.notify_one();
 }
 
-void TaskScheduler::run() {
-    std::thread(&TaskScheduler::processTasks, this).detach();
-}
+void TaskScheduler::run() { std::thread(&TaskScheduler::processTasks, this).detach(); }
 
 void TaskScheduler::processTasks() {
     while (running) {
         std::unique_lock<std::mutex> lock(queueMutex);
 
-        taskCondition.wait(lock, [this] {return !taskQueue.empty() || !running;});
+        taskCondition.wait(lock, [this] { return !taskQueue.empty() || !running; });
 
         if (!running) break;
 

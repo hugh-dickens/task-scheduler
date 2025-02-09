@@ -21,7 +21,7 @@ TaskClient::TaskClient(const std::string& serverIP, int port) {
 void TaskClient::sendTask(const std::string& taskCommand, int delay) {
     std::string msg = taskCommand + "|" + std::to_string(delay);
     send(clientSocket, msg.c_str(), msg.size(), 0);
-    
+
     char buffer[1024] = {0};
     int bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
 
