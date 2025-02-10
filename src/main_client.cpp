@@ -6,16 +6,31 @@ int main() {
 
     TaskClient client(serverIP, port);
 
-    std::string taskCommand;
+    std::string taskInput;
     int delay;
+    std::string taskType;
 
-    std::cout << "Enter command to schedule: ";
-    std::getline(std::cin, taskCommand);
+    int choice;
+    std::cout << "Enter 1 for a COMMAND or 2 to process a FILE: ";
+    std::cin >> choice;
+
+    if (choice == 1) {
+        taskType = "COMMAND";
+        std::cout << "Enter command: ";
+        std::cin >> taskInput;
+    } else if (choice == 2) {
+        taskType = "FILE_PROCESS";
+        std::cout << "Enter file path: ";
+        std::cin >> taskInput;
+    } else {
+        std::cout << "Invalid choice\n";
+        return 1;
+    }
 
     std::cout << "Enter delay in seconds: ";
     std::cin >> delay;
 
-    client.sendTask(taskCommand, delay);
+    client.sendTask(taskInput, delay, taskType);
 
     return 0;
 }

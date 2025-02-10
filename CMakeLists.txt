@@ -18,7 +18,8 @@ add_executable(Server
     src/server.cpp 
     src/scheduler.cpp 
     src/logger.cpp 
-    src/security.cpp)
+    src/security.cpp
+    src/task.cpp)
 target_link_libraries(Server pthread)
 
 # Client executable

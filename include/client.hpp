@@ -8,7 +8,7 @@
 class TaskClient {
    public:
     TaskClient(const std::string& serverIP, int port);
-    void sendTask(const std::string& taskCommand, int delay);
+    void sendTask(const std::string& taskInput, int delay, const std::string& taskType);
 
    private:
     int clientSocket;
