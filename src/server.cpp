@@ -1,6 +1,8 @@
 #include "server.hpp"
-#include "scheduler.hpp"
 
+#include <array>
+
+#include "scheduler.hpp"
 
 TaskServer::TaskServer(int port, ITaskScheduler& scheduler) : scheduler(scheduler) {
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -14,7 +16,8 @@ TaskServer::TaskServer(int port, ITaskScheduler& scheduler) : scheduler(schedule
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = htons(port);
 
-    if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+    if (bind(serverSocket, reinterpret_cast<struct sockaddr*>(&serverAddr), sizeof(serverAddr)) ==
+        -1) {
         perror("Failed to bind server socket");
         exit(EXIT_FAILURE);
     }
@@ -24,15 +27,16 @@ TaskServer::TaskServer(int port, ITaskScheduler& scheduler) : scheduler(schedule
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "Server listening on port " << port << std::endl;
+    std::cout << "Server listening on port " << port << "\n";
 }
 
 void TaskServer::start() {
     while (true) {
         sockaddr_in clientAddr;
         socklen_t clientLen = sizeof(clientAddr);
-        int clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, &clientLen);
-        
+        int clientSocket =
+            accept(serverSocket, reinterpret_cast<struct sockaddr*>(&clientAddr), &clientLen);
+
         if (clientSocket == -1) {
             perror("Failed to accept client connection");
             continue;
@@ -40,13 +44,13 @@ void TaskServer::start() {
 
         std::thread clientThread(&TaskServer::handleClient, this, clientSocket);
         clientThread.detach();
-    }    
+    }
 }
 
 void TaskServer::handleClient(int clientSocket) {
-    char buffer[1024] = {0};
-    int bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
-    
+    std::array<char, 1024> buffer = {0};
+    int bytesRead = recv(clientSocket, buffer.data(), sizeof(buffer), 0);
+
     if (bytesRead == -1) {
         perror("Failed to read from client socket");
         close(clientSocket);
@@ -54,7 +58,7 @@ void TaskServer::handleClient(int clientSocket) {
     }
 
     if (bytesRead > 0) {
-        std::string request(buffer, bytesRead);
+        std::string request(buffer.data(), bytesRead);
 
         // Parse request format: "command|delay"
         size_t delimiterPos = request.find('|');
