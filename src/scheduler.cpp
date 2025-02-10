@@ -1,8 +1,14 @@
-#include "scheduler.hpp"
-
 #include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <json.hpp>
 
+#include "scheduler.hpp"
 #include "logger.hpp"
+
+using json = nlohmann::json;
 
 void TaskScheduler::scheduleTask(const std::string& input, int delay, TaskType type) {
     std::lock_guard<std::mutex> lock(queueMutex);
@@ -26,24 +32,55 @@ void TaskScheduler::scheduleTask(const std::string& input, int delay, TaskType t
 void TaskScheduler::run() { std::thread(&TaskScheduler::processTasks, this).detach(); }
 
 void TaskScheduler::processFile(const std::string& filePath) {
-    std::ifstream inputFile(filePath);
+    std::ifstream inputFile(filePath, std::ios::in);
     if (!inputFile.is_open()) {
         std::cerr << "[ERROR] Failed to open file: " << filePath << "\n";
         return;
     }
 
-    std::string outputFilePath = filePath + ".processed";
+    std::string outputFilePath = filePath + ".json";
     std::ofstream outputFile(outputFilePath);
+    if (!outputFile.is_open()) {
+        std::cerr << "[ERROR] Failed to create output file: " << outputFilePath << "\n";
+        return;
+    }
 
     std::string line;
-    while (std::getline(inputFile, line)) {
-        std::reverse(line.begin(), line.end());
-        outputFile << line << "\n";
+    std::vector<std::string> headers;
+    json jsonArray = json::array();
+
+    // Read the header line
+    if (std::getline(inputFile, line)) {
+        std::stringstream ss(line);
+        std::string column;
+        while (std::getline(ss, column, ',')) {
+            headers.push_back(column);
+        }
     }
+
+    // Read the data lines
+    while (std::getline(inputFile, line)) {
+        std::stringstream ss(line);
+        std::string value;
+        json jsonObject;
+        size_t colIndex = 0;
+
+        while (std::getline(ss, value, ',')) {
+            if (colIndex < headers.size()) {
+                jsonObject[headers[colIndex]] = value;
+            }
+            colIndex++;
+        }
+
+        jsonArray.push_back(jsonObject);
+    }
+    
+    // write JSON to file
+    outputFile << jsonArray.dump(4);
 
     inputFile.close();
     outputFile.close();
-    std::cout << "[INFO] File processed: " << outputFilePath << "\n";
+    std::cout << "[INFO] CSV converted to JSON: " << outputFilePath << "\n";
 }
 
 void TaskScheduler::processTasks() {
@@ -76,7 +113,7 @@ void TaskScheduler::processTasks() {
             } else if (task.type == TaskType::FILE_PROCESS) {
                 std::cout << "[INFO] Processing file: " << task.filePath << "\n";
                 processFile(task.filePath);
-                Logger::getInstance().log("Processing file: " + task.filePath);
+                Logger::getInstance().log("Processed file: " + task.filePath);
             }
 
             lock.lock();

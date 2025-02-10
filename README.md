@@ -14,11 +14,11 @@ The project supports **Linux, Windows (via WSL)**. However, tested on Windows vi
 ## Features
 - ✅ Multi-threaded task scheduler using priority queues.
 - ✅ TCP-based communication between client and server.
-- ✅ Executes system commands (e.g., `ls`, `echo Hello`).
+- ✅ Executes system commands (e.g., `ls`, `echo Hello`) and file conversions (e.g. csv to JSON).
 - ✅ Uses `std::system()` to run commands.
 - ✅ Designed for scalability with separate client and server binaries.
 - ✅ Logging system for executed tasks. 
-- ✅ Secure command execution (prevent dangerous commands by denying root execution). 
+- ✅ Secure command execution, denies root execution. Requires extension. 
 
 ---
 
