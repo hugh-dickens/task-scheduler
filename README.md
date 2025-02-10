@@ -37,7 +37,7 @@ The project supports **Linux, Windows (via WSL)**. However, tested on Windows vi
 ```sh
 # Install required dependencies
 sudo apt update
-sudo apt install -y build-essential cmake clang-format clang-tidy cppcheck libgtest-dev
+sudo apt install -y build-essential cmake clang-format clang-tidy cppcheck libgtest-dev googletest
 ```
 
 ### **Windows (Using WSL)**
@@ -66,9 +66,9 @@ make
 
 After running the Server then the Client, the terminal will prompt you for a command e.g. `ls`, and a delay e.g. `2s`
 
-### Static Analysis and Style
+### Static Analysis
 
-This project used clang-tidy and cpp check for static analysis and style. To run:
+This project used clang-tidy and cpp check for static analysis. To run:
 
 1. Build the Project
 ```sh
@@ -92,6 +92,17 @@ Setup with a pre-commit hook, however, to manually run:
 ```sh
 clang-format -i src/*.cpp include/*.hpp
 ```
+
+### Unit tests
+
+Using the googletest framework with GMock and GTest. To run the tests after building the project:
+
+```sh
+./test_imports
+```
+
+NB: currently on test_imports exists... to be extended.
+
 
 ### License
 
