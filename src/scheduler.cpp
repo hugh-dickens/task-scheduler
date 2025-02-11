@@ -1,11 +1,12 @@
+#include "scheduler.hpp"
+
 #include <cstdlib>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <json.hpp>
 #include <sstream>
 #include <vector>
-#include <json.hpp>
 
-#include "scheduler.hpp"
 #include "logger.hpp"
 
 using json = nlohmann::json;
@@ -32,7 +33,6 @@ void TaskScheduler::scheduleTask(const std::string& input, int delay, TaskType t
 void TaskScheduler::run() { std::thread(&TaskScheduler::processTasks, this).detach(); }
 
 void TaskScheduler::processFile(const std::string& filePath) {
-    
     std::string fileExtension = std::filesystem::path(filePath).extension().string();
 
     if (fileExtension == ".json") {
@@ -43,10 +43,11 @@ void TaskScheduler::processFile(const std::string& filePath) {
         convertCsvToJson(filePath, outputFilePath);
     } else {
         std::cerr << "[ERROR] Unsupported file format: " << fileExtension << "\n";
-    }       
+    }
 }
 
-void TaskScheduler::convertJsonToCsv(const std::string& jsonFilePath, const std::string& csvFilePath) {
+void TaskScheduler::convertJsonToCsv(const std::string& jsonFilePath,
+                                     const std::string& csvFilePath) {
     std::ifstream inputFile(jsonFilePath, std::ios::in);
     if (!inputFile.is_open()) {
         std::cerr << "[ERROR] Failed to open file: " << jsonFilePath << "\n";
@@ -103,7 +104,8 @@ void TaskScheduler::convertJsonToCsv(const std::string& jsonFilePath, const std:
     std::cout << "[INFO] JSON converted to CSV: " << csvFilePath << "\n";
 }
 
-void TaskScheduler::convertCsvToJson(const std::string& csvFilePath, const std::string& jsonFilePath) {
+void TaskScheduler::convertCsvToJson(const std::string& csvFilePath,
+                                     const std::string& jsonFilePath) {
     std::ifstream inputFile(csvFilePath, std::ios::in);
     if (!inputFile.is_open()) {
         std::cerr << "[ERROR] Failed to open file: " << csvFilePath << "\n";
@@ -137,13 +139,13 @@ void TaskScheduler::convertCsvToJson(const std::string& csvFilePath, const std::
 
         for (size_t i = 0; i < headers.size(); i++) {
             if (!std::getline(ss, value, ',')) {
-                value = ""; // Handle missing values
+                value = "";  // Handle missing values
             }
             jsonObject[headers[i]] = value;
         }
         jsonArray.push_back(jsonObject);
     }
-    
+
     // write JSON to file
     outputFile << jsonArray.dump(4);
 
