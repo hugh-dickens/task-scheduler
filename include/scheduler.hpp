@@ -27,5 +27,7 @@ class TaskScheduler : public ITaskScheduler {
     bool running = true;
 
     void processFile(const std::string& filePath);
+    void convertJsonToCsv(const std::string& jsonFilePath, const std::string& csvFilePath);
+    void convertCsvToJson(const std::string& csvFilePath, const std::string& jsonFilePath);
     void processTasks();
 };
