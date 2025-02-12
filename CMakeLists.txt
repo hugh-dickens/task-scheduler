@@ -4,46 +4,16 @@ project(TaskSchedulerProject)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
 
-# Google Test setup
-find_package(GTest REQUIRED)
 enable_testing()
 
-# Include header files
-include_directories(include)
-
-# Server executable
-add_executable(Server 
-    src/main_server.cpp 
-    src/server.cpp 
-    src/scheduler.cpp 
-    src/logger.cpp 
-    src/security.cpp
-    src/task.cpp)
-target_link_libraries(Server pthread)
-
-# Client executable
-add_executable(Client 
-    src/main_client.cpp 
-    src/client.cpp)
-target_link_libraries(Client pthread)
-
-# Test executable
-add_executable(run_tests 
-    tests/test_imports.cpp
-    tests/test_scheduler.cpp
-    src/scheduler.cpp
-    src/task.cpp
-    src/logger.cpp
-    )
-
-target_link_libraries(run_tests 
-    PRIVATE 
-    GTest::GTest 
-    GTest::Main 
-    GTest::gmock 
-    GTest::gmock_main 
-    pthread)
+# Add subdirectories
+add_subdirectory(src)
+add_subdirectory(client)
+add_subdirectory(tests)
 
 # Enable clang-tidy if available
 find_program(CLANG_TIDY_EXE NAMES clang-tidy)

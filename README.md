@@ -54,12 +54,12 @@ make
 ```
 3. Running the Server
 ```sh 
-./Server
+./bin/Server
 ```
 
 4. Running the Client
 ```sh
-./Client
+./bin/Client
 ```
 
 ### Example Usage
@@ -98,7 +98,7 @@ clang-format -i src/*.cpp include/*.hpp
 Using the googletest framework with GMock and GTest. To run the tests after building the project:
 
 ```sh
-./run_tests
+./bin/run_tests
 ```
 
 NB: currently on test_imports exists... to be extended.
