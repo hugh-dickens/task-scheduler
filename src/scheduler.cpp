@@ -95,8 +95,8 @@ void TaskScheduler::convertJsonToCsv(const std::string& jsonFilePath,
             if (i < headers.size() - 1) {
                 outputFile << ",";
             }
-            outputFile << "\n";
         }
+        outputFile << "\n";
     }
 
     inputFile.close();

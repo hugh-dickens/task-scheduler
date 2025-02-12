@@ -26,28 +26,28 @@ protected:
 
     void createTestCsv() {
         std::ofstream file("test.csv");
-        file << "name,age,city\n";
-        file << "Alice,30,New York\n";
-        file << "Bob,25,Los Angeles\n";
+        file << "age,city,name\n";
+        file << "30,New York,Alice\n";
+        file << "25,Los Angeles,Bob\n";
         file.close();
     }
-
+    
     void createTestJson() {
         json testData = {
-            {{"name", "Alice"}, {"age", "30"}, {"city", "New York"}},
-            {{"name", "Bob"}, {"age", "25"}, {"city", "Los Angeles"}}
+            {{"age", "30"}, {"city", "New York"}, {"name", "Alice"}},
+            {{"age", "25"}, {"city", "Los Angeles"}, {"name", "Bob"}}
         };
         std::ofstream file("test.json");
         file << testData.dump(4);
         file.close();
     }
-
+    
     bool fileExists(const std::string& filename) {
         std::ifstream file(filename);
         return file.good();
     }
 };
-
+    
 // Test JSON → CSV conversion
 TEST_F(TaskSchedulerTest, ConvertJsonToCsv) {
     scheduler.testConvertJsonToCsv("test.json", "output.csv");
@@ -60,9 +60,9 @@ TEST_F(TaskSchedulerTest, ConvertJsonToCsv) {
     file.close();
 
     std::string expected =
-        "name,age,city\n"
-        "\"Alice\",\"30\",\"New York\"\n"
-        "\"Bob\",\"25\",\"Los Angeles\"\n";
+        "age,city,name\n"
+        "\"30\",\"New York\",\"Alice\"\n"
+        "\"25\",\"Los Angeles\",\"Bob\"\n";
 
     ASSERT_EQ(buffer.str(), expected);
 }
@@ -79,8 +79,8 @@ TEST_F(TaskSchedulerTest, ConvertCsvToJson) {
     file.close();
 
     json expected = {
-        {{"name", "Alice"}, {"age", "30"}, {"city", "New York"}},
-        {{"name", "Bob"}, {"age", "25"}, {"city", "Los Angeles"}}
+        {{"age", "30"},{"city", "New York"},{"name", "Alice"}},
+        {{"age", "25"},{"city", "Los Angeles"},{"name", "Bob"}}
     };
 
     ASSERT_EQ(outputJson, expected);
