@@ -3,18 +3,18 @@
 ## Overview
 This project implements a **multi-threaded task scheduler** that receives tasks over a **TCP network**. The system consists of:
 
-- A **Task Scheduler** that schedules and executes commands at a given delay.
+- A **Task Scheduler** that schedules and executes commands at a given delay (this includes file conversions from csv -> json and in reverse).
 - A **Server** that listens for client connections and forwards commands to the scheduler.
 - A **Client** that sends commands to be scheduled.
 
-The project supports **Linux, Windows (via WSL)**. However, tested on Windows via WSL running on Ubuntu 22.04. It may work on other systems but this is not supported nor tested.
+The project supports **Linux, Windows (via WSL)**. It has been tested on Windows via WSL running on Ubuntu 22.04. It may work on other systems but this is not supported nor tested.
 
 ---
 
 ## Features
 - ✅ Multi-threaded task scheduler using priority queues.
 - ✅ TCP-based communication between client and server.
-- ✅ Executes system commands (e.g., `ls`, `echo Hello`) and file conversions (e.g. csv to JSON).
+- ✅ Executes system commands (e.g., `ls`, `echo Hello`) and file conversions (e.g. csv to JSON and reverse).
 - ✅ Uses `std::system()` to run commands.
 - ✅ Designed for scalability with separate client and server binaries.
 - ✅ Logging system for executed tasks. 
@@ -101,7 +101,7 @@ Using the googletest framework with GMock and GTest. To run the tests after buil
 ./bin/run_tests
 ```
 
-NB: currently on test_imports exists... to be extended.
+NB: currently there is only test_imports and test_scheduler. To be extended...
 
 
 ### License
