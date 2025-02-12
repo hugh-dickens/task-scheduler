@@ -1,6 +1,7 @@
 #include "server.hpp"
 
 #include <array>
+#include <sstream>
 
 #include "scheduler.hpp"
 
@@ -60,16 +61,36 @@ void TaskServer::handleClient(int clientSocket) {
     if (bytesRead > 0) {
         std::string request(buffer.data(), bytesRead);
 
-        // Parse request format: "command|delay"
-        size_t delimiterPos = request.find('|');
-        if (delimiterPos != std::string::npos) {
-            std::string command = request.substr(0, delimiterPos);
-            int delay = std::stoi(request.substr(delimiterPos + 1));
+        std::istringstream requestStream(request);
+        std::string taskType, taskInput, delayStr;
 
-            scheduler.scheduleTask(command, delay);
-            std::string response = "Task scheduled: " + command + "\n";
+        if (std::getline(requestStream, taskType, '|') &&
+            std::getline(requestStream, taskInput, '|') && std::getline(requestStream, delayStr)) {
+            try {
+                int delay = std::stoi(delayStr);
+
+                if (taskType == "COMMAND") {
+                    scheduler.scheduleTask(taskInput, delay, TaskType::COMMAND);
+                } else if (taskType == "FILE_PROCESS") {
+                    scheduler.scheduleTask(taskInput, delay, TaskType::FILE_PROCESS);
+                } else {
+                    std::string response = "Invalid task type\n";
+                    send(clientSocket, response.c_str(), response.size(), 0);
+                    close(clientSocket);
+                    return;
+                }
+
+                std::string response = "Task scheduled: " + taskInput + "\n";
+                send(clientSocket, response.c_str(), response.size(), 0);
+            } catch (const std::exception& e) {
+                std::string response = "Error processing request: " + std::string(e.what()) + "\n";
+                send(clientSocket, response.c_str(), response.size(), 0);
+            }
+        } else {
+            std::string response = "Invalid request format\n";
             send(clientSocket, response.c_str(), response.size(), 0);
         }
     }
+
     close(clientSocket);
 }

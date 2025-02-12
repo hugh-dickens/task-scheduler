@@ -21,8 +21,8 @@ TaskClient::TaskClient(const std::string& serverIP, int port) {
     }
 }
 
-void TaskClient::sendTask(const std::string& taskCommand, int delay) {
-    std::string msg = taskCommand + "|" + std::to_string(delay);
+void TaskClient::sendTask(const std::string& taskInput, int delay, const std::string& taskType) {
+    std::string msg = taskType + "|" + taskInput + "|" + std::to_string(delay);
     send(clientSocket, msg.c_str(), msg.size(), 0);
 
     std::array<char, 1024> buffer = {0};
