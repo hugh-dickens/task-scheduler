@@ -29,11 +29,15 @@ add_executable(Client
 target_link_libraries(Client pthread)
 
 # Test executable
-include_directories(${GTEST_INCLUDE_DIRS})
+add_executable(run_tests 
+    tests/test_imports.cpp
+    tests/test_scheduler.cpp
+    src/scheduler.cpp
+    src/task.cpp
+    src/logger.cpp
+    )
 
-add_executable(test_imports 
-    tests/test_imports.cpp)
-target_link_libraries(test_imports 
+target_link_libraries(run_tests 
     PRIVATE 
     GTest::GTest 
     GTest::Main 

@@ -98,7 +98,7 @@ clang-format -i src/*.cpp include/*.hpp
 Using the googletest framework with GMock and GTest. To run the tests after building the project:
 
 ```sh
-./test_imports
+./run_tests
 ```
 
 NB: currently on test_imports exists... to be extended.
