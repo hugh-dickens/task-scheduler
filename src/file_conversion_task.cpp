@@ -99,14 +99,18 @@ void FileConversionTask::convertCsvToJson(const std::string& csvFilePath,
         }
     }
 
-    // Read data lines
+    // Read data lines -> greater robustness required
     while (std::getline(inputFile, line)) {
         std::istringstream ss(line);
         std::string value;
         json jsonObject;
         for (size_t i = 0; i < headers.size(); i++) {
             if (!std::getline(ss, value, ',')) {
-                value = "";
+                value = "";  // Handle missing values
+            }
+            // Remove surrounding quotes if they exist
+            if (!value.empty() && value.front() == '"' && value.back() == '"') {
+                value = value.substr(1, value.size() - 2);
             }
             jsonObject[headers[i]] = value;
         }

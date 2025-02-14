@@ -6,11 +6,12 @@
 class Logger {
    public:
     static Logger& getInstance();
-    void log(const std::string& message);
+    virtual void log(const std::string& message);
+    virtual ~Logger();
 
-   private:
+   protected:
     Logger();
-    ~Logger();
+
     std::ofstream logFile;
     std::mutex logMutex;
 };
