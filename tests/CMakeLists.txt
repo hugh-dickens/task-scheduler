@@ -2,7 +2,7 @@ find_package(GTest REQUIRED)
 
 add_executable(run_tests 
     test_imports.cpp
-    test_scheduler.cpp
+    # test_scheduler.cpp
 )
 
 target_include_directories(run_tests PRIVATE

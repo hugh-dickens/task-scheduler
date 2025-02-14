@@ -3,7 +3,8 @@ add_library(TaskScheduler STATIC
     scheduler.cpp
     logger.cpp
     security.cpp
-    task.cpp 
+    command_task.cpp 
+    file_conversion_task.cpp
 )
 
 target_include_directories(TaskScheduler PUBLIC ${CMAKE_SOURCE_DIR}/include)
