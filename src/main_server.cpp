@@ -14,5 +14,6 @@ auto main() -> int {
     TaskServer server(8080, scheduler);
     server.start();  // start the server to listen for client connections
 
+    scheduler.stop();  // stop the scheduler when the server is done
     return 0;
 }

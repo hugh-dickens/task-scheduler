@@ -31,6 +31,7 @@ public:
 
 private:
     void processTasks();
+    void cleanup();
 
     Logger& logger;
     bool running;

@@ -9,7 +9,17 @@ TaskScheduler::TaskScheduler(Logger& logger)
 }
 
 TaskScheduler::~TaskScheduler() {
-    stop();
+    cleanup();
+}
+
+void TaskScheduler::cleanup() {
+    if (running) {
+        running = false;
+        taskCondition.notify_all();
+        if (workerThread.joinable()) {
+            workerThread.join();
+        }
+    }
 }
 
 void TaskScheduler::scheduleTask(std::unique_ptr<ITask> task, int delay) {
