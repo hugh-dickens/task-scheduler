@@ -1,109 +1,63 @@
 #include <gtest/gtest.h>
-#include <fstream>
-#include <sstream>
 #include "scheduler.hpp"
-#include "json.hpp"
+#include "fake_logger.hpp"
+#include <chrono>
+#include <thread>
+#include <vector>
+#include <string>
 
-using json = nlohmann::json;
 
-class TaskSchedulerTest : public ::testing::Test {
-protected:
-    TaskScheduler scheduler;
-
-    void SetUp() override {
-        // Create test files before each test
-        createTestCsv();
-        createTestJson();
+// TestTask: a simple task that logs a given message when run.
+class TestTask : public ITask {
+public:
+    explicit TestTask(const std::string& msg) : message(msg) {}
+    void run(Logger& logger) override {
+        logger.log(message);
     }
-
-    void TearDown() override {
-        // Cleanup test files after each test
-        remove("test.csv");
-        remove("test.json");
-        remove("output.csv");
-        remove("output.json");
-    }
-
-    void createTestCsv() {
-        std::ofstream file("test.csv");
-        file << "age,city,name\n";
-        file << "30,New York,Alice\n";
-        file << "25,Los Angeles,Bob\n";
-        file.close();
-    }
-    
-    void createTestJson() {
-        json testData = {
-            {{"age", "30"}, {"city", "New York"}, {"name", "Alice"}},
-            {{"age", "25"}, {"city", "Los Angeles"}, {"name", "Bob"}}
-        };
-        std::ofstream file("test.json");
-        file << testData.dump(4);
-        file.close();
-    }
-    
-    bool fileExists(const std::string& filename) {
-        std::ifstream file(filename);
-        return file.good();
-    }
+private:
+    std::string message;
 };
+
+// Test case: verifies that a scheduled task executes and logs its message.
+TEST(TaskSchedulerTest, ExecutesScheduledTask) {
+    FakeLogger fakeLogger;
+    TaskScheduler scheduler(fakeLogger);
     
-// Test JSON → CSV conversion
-TEST_F(TaskSchedulerTest, ConvertJsonToCsv) {
-    scheduler.testConvertJsonToCsv("test.json", "output.csv");
-
-    ASSERT_TRUE(fileExists("output.csv"));
-
-    std::ifstream file("output.csv");
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    file.close();
-
-    std::string expected =
-        "age,city,name\n"
-        "\"30\",\"New York\",\"Alice\"\n"
-        "\"25\",\"Los Angeles\",\"Bob\"\n";
-
-    ASSERT_EQ(buffer.str(), expected);
+    // Schedule a task with a 1-second delay.
+    std::string expectedMessage = "Task executed";
+    scheduler.scheduleTask(std::make_unique<TestTask>(expectedMessage), 1);
+    
+    // Start the scheduler in a background thread.
+    scheduler.run();
+    
+    // Wait long enough for the task to execute.
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    
+    // Stop the scheduler to clean up.
+    scheduler.stop();
+    
+    // Verify that the logger recorded the expected message.
+    ASSERT_FALSE(fakeLogger.logs.empty());
+    EXPECT_EQ(fakeLogger.logs.front(), expectedMessage);
 }
 
-// Test CSV → JSON conversion
-TEST_F(TaskSchedulerTest, ConvertCsvToJson) {
-    scheduler.testConvertCsvToJson("test.csv", "output.json");
-
-    ASSERT_TRUE(fileExists("output.json"));
-
-    std::ifstream file("output.json");
-    json outputJson;
-    file >> outputJson;
-    file.close();
-
-    json expected = {
-        {{"age", "30"},{"city", "New York"},{"name", "Alice"}},
-        {{"age", "25"},{"city", "Los Angeles"},{"name", "Bob"}}
-    };
-
-    ASSERT_EQ(outputJson, expected);
-}
-
-// Test scheduling a command task
-TEST_F(TaskSchedulerTest, ScheduleCommandTask) {
-    scheduler.scheduleTask("echo Hello", 1, TaskType::COMMAND);
-
-    ASSERT_FALSE(scheduler.isTaskQueueEmpty());
-
-    Task task = scheduler.getTopTask();
-    ASSERT_EQ(task.type, TaskType::COMMAND);
-    ASSERT_EQ(task.command, "echo Hello");
-}
-
-// Test scheduling a file processing task
-TEST_F(TaskSchedulerTest, ScheduleFileProcessingTask) {
-    scheduler.scheduleTask("test.csv", 2, TaskType::FILE_PROCESS);
-
-    ASSERT_FALSE(scheduler.isTaskQueueEmpty());
-
-    Task task = scheduler.getTopTask();
-    ASSERT_EQ(task.type, TaskType::FILE_PROCESS);
-    ASSERT_EQ(task.filePath, "test.csv");
+// Test case: verifies that tasks are executed in order based on delay.
+TEST(TaskSchedulerTest, ProcessesTasksInOrder) {
+    FakeLogger fakeLogger;
+    TaskScheduler scheduler(fakeLogger);
+    
+    // Schedule two tasks with different delays.
+    std::string msgFirst = "First task";
+    std::string msgSecond = "Second task";
+    scheduler.scheduleTask(std::make_unique<TestTask>(msgSecond), 2);
+    scheduler.scheduleTask(std::make_unique<TestTask>(msgFirst), 1);
+    
+    scheduler.run();
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    scheduler.stop();
+    
+    // Verify that the first logged message corresponds to the task with the shorter delay.
+    ASSERT_GE(fakeLogger.logs.size(), 2u);
+    EXPECT_EQ(fakeLogger.logs[0], msgFirst);
+    EXPECT_EQ(fakeLogger.logs[1], msgSecond);
 }

@@ -3,6 +3,8 @@ find_package(GTest REQUIRED)
 add_executable(run_tests 
     test_imports.cpp
     test_scheduler.cpp
+    test_command_task.cpp  
+    test_file_conversion_task.cpp
 )
 
 target_include_directories(run_tests PRIVATE

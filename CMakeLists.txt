@@ -38,10 +38,11 @@ find_program(CPPCHECK_EXE NAMES cppcheck)
 if(CPPCHECK_EXE)
     add_custom_target(
         run_cppcheck
-        COMMAND ${CPPCHECK_EXE} --enable=all --inconclusive --quiet
+        COMMAND ${CPPCHECK_EXE} --enable=all --inconclusive --quiet --force
         --language=c++
         --std=c++20
         --suppress=missingIncludeSystem
+        --suppress=*:${CMAKE_SOURCE_DIR}/include/json.hpp # I didnt write this so ignore!
         -I ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/src/
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

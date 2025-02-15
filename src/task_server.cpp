@@ -1,9 +1,14 @@
 #include "task_server.hpp"
 
 #include <array>
+#include <cstring>
+#include <iostream>
 #include <sstream>
+#include <thread>
 
-#include "scheduler.hpp"
+// Include the headers for your task types.
+#include "command_task.hpp"
+#include "file_conversion_task.hpp"
 
 TaskServer::TaskServer(int port, ITaskScheduler& scheduler) : scheduler(scheduler) {
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -37,7 +42,6 @@ void TaskServer::start() {
         socklen_t clientLen = sizeof(clientAddr);
         int clientSocket =
             accept(serverSocket, reinterpret_cast<struct sockaddr*>(&clientAddr), &clientLen);
-
         if (clientSocket == -1) {
             perror("Failed to accept client connection");
             continue;
@@ -50,7 +54,7 @@ void TaskServer::start() {
 
 void TaskServer::handleClient(int clientSocket) {
     std::array<char, 1024> buffer = {0};
-    int bytesRead = recv(clientSocket, buffer.data(), sizeof(buffer), 0);
+    int bytesRead = recv(clientSocket, buffer.data(), buffer.size(), 0);
 
     if (bytesRead == -1) {
         perror("Failed to read from client socket");
@@ -60,7 +64,6 @@ void TaskServer::handleClient(int clientSocket) {
 
     if (bytesRead > 0) {
         std::string request(buffer.data(), bytesRead);
-
         std::istringstream requestStream(request);
         std::string taskType, taskInput, delayStr;
 
@@ -70,9 +73,9 @@ void TaskServer::handleClient(int clientSocket) {
                 int delay = std::stoi(delayStr);
 
                 if (taskType == "COMMAND") {
-                    scheduler.scheduleTask(taskInput, delay, TaskType::COMMAND);
+                    scheduler.scheduleTask(std::make_unique<CommandTask>(taskInput), delay);
                 } else if (taskType == "FILE_PROCESS") {
-                    scheduler.scheduleTask(taskInput, delay, TaskType::FILE_PROCESS);
+                    scheduler.scheduleTask(std::make_unique<FileConversionTask>(taskInput), delay);
                 } else {
                     std::string response = "Invalid task type\n";
                     send(clientSocket, response.c_str(), response.size(), 0);

@@ -1,56 +1,42 @@
 #pragma once
+
+#include "tasks.hpp"
 #include <condition_variable>
-#include <functional>
 #include <mutex>
-#include <queue>
-#include <thread>
 #include <vector>
+#include <thread>
 
-#include "task.hpp"
-
+// Interface for scheduling tasks.
 class ITaskScheduler {
-   public:
-    virtual void scheduleTask(const std::string& input, int delay, TaskType type) = 0;
+public:
+    virtual void scheduleTask(std::unique_ptr<ITask> task, int delay) = 0;
     virtual void run() = 0;
-    virtual void testConvertJsonToCsv(const std::string& jsonFilePath, const std::string& csvFilePath) = 0;
-    virtual void testConvertCsvToJson(const std::string& csvFilePath, const std::string& jsonFilePath) = 0;
-    virtual bool isTaskQueueEmpty() const = 0;
-    virtual Task getTopTask() const = 0;
+    virtual void stop() = 0;
     virtual ~ITaskScheduler() = default;
 };
 
+// TaskScheduler is responsible for scheduling and dispatching tasks.
 class TaskScheduler : public ITaskScheduler {
-   public:
-    void scheduleTask(const std::string& input, int delay, TaskType type) override;
+public:
+    // Constructor receives a Logger reference via dependency injection.
+    explicit TaskScheduler(Logger& logger);
+    ~TaskScheduler();
+
+    // Schedules a task to run after 'delay' seconds.
+    void scheduleTask(std::unique_ptr<ITask> task, int delay) override;
+    // Starts the background worker thread.
     void run() override;
+    // Signals the worker to stop and waits for it to finish.
+    void stop() override;
 
-    // Expose controlled access for testing
-    void testConvertJsonToCsv(const std::string& jsonFilePath, const std::string& csvFilePath) {
-        convertJsonToCsv(jsonFilePath, csvFilePath);
-    }
-    void testConvertCsvToJson(const std::string& csvFilePath, const std::string& jsonFilePath) {
-        convertCsvToJson(csvFilePath, jsonFilePath);
-    }
-    bool isTaskQueueEmpty() const {
-        return taskQueue.empty();
-    }
-    Task getTopTask() const {
-        if (taskQueue.empty()) {
-            throw std::runtime_error("Task queue is empty");
-        }
-        return taskQueue.top();
-    }
+private:
+    void processTasks();
+    void cleanup();
 
-   private:
-    std::priority_queue<Task> taskQueue;
+    Logger& logger;
+    bool running;
+    std::vector<ScheduledTask> taskHeap;
     std::mutex queueMutex;
     std::condition_variable taskCondition;
-    bool running = true;
-
-    void processFile(const std::string& filePath);
-    void convertJsonToCsv(const std::string& jsonFilePath, const std::string& csvFilePath);
-    void convertCsvToJson(const std::string& csvFilePath, const std::string& jsonFilePath);
-    void processTasks();
-
-    friend class TaskSchedulerTest;
+    std::thread workerThread;
 };

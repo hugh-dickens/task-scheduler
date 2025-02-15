@@ -1,193 +1,78 @@
 #include "scheduler.hpp"
 
-#include <cstdlib>
-#include <fstream>
+#include <algorithm>
+#include <chrono>
 #include <iostream>
-#include <json.hpp>
-#include <sstream>
-#include <vector>
+#include <thread>
 
-#include "logger.hpp"
+TaskScheduler::TaskScheduler(Logger& logger) : logger(logger), running(true) {}
 
-using json = nlohmann::json;
+TaskScheduler::~TaskScheduler() { cleanup(); }
 
-void TaskScheduler::scheduleTask(const std::string& input, int delay, TaskType type) {
-    std::lock_guard<std::mutex> lock(queueMutex);
-
-    Task task;
-    task.type = type;
-    std::cout << "[DEBUG] Task type: " << task.type << "\n";
-
-    task.executeAt = std::chrono::system_clock::now() + std::chrono::seconds(delay);
-
-    if (type == TaskType::COMMAND) {
-        task.command = input;
-    } else if (type == TaskType::FILE_PROCESS) {
-        task.filePath = input;
+void TaskScheduler::cleanup() {
+    if (running) {
+        running = false;
+        taskCondition.notify_all();
+        if (workerThread.joinable()) {
+            workerThread.join();
+        }
     }
+}
 
-    taskQueue.push(task);
+void TaskScheduler::scheduleTask(std::unique_ptr<ITask> task, int delay) {
+    auto executeTime = std::chrono::system_clock::now() + std::chrono::seconds(delay);
+    ScheduledTask scheduled{executeTime, std::move(task)};
+
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        taskHeap.push_back(std::move(scheduled));
+        std::push_heap(taskHeap.begin(), taskHeap.end());
+    }
     taskCondition.notify_one();
 }
 
-void TaskScheduler::run() { std::thread(&TaskScheduler::processTasks, this).detach(); }
-
-void TaskScheduler::processFile(const std::string& filePath) {
-    std::string fileExtension = std::filesystem::path(filePath).extension().string();
-
-    if (fileExtension == ".json") {
-        std::string outputFilePath = filePath.substr(0, filePath.find_last_of(".")) + ".csv";
-        convertJsonToCsv(filePath, outputFilePath);
-    } else if (fileExtension == ".csv") {
-        std::string outputFilePath = filePath.substr(0, filePath.find_last_of(".")) + ".json";
-        convertCsvToJson(filePath, outputFilePath);
-    } else {
-        std::cerr << "[ERROR] Unsupported file format: " << fileExtension << "\n";
+void TaskScheduler::run() {
+    if (!workerThread.joinable()) {
+        workerThread = std::thread(&TaskScheduler::processTasks, this);
     }
 }
 
-void TaskScheduler::convertJsonToCsv(const std::string& jsonFilePath,
-                                     const std::string& csvFilePath) {
-    std::ifstream inputFile(jsonFilePath, std::ios::in);
-    if (!inputFile.is_open()) {
-        std::cerr << "[ERROR] Failed to open file: " << jsonFilePath << "\n";
-        return;
+void TaskScheduler::stop() {
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        running = false;
     }
-
-    std::ofstream outputFile(csvFilePath);
-    if (!outputFile.is_open()) {
-        std::cerr << "[ERROR] Failed to create output file: " << csvFilePath << "\n";
-        return;
+    taskCondition.notify_all();
+    if (workerThread.joinable()) {
+        workerThread.join();
     }
-
-    json jsonArray;
-    try {
-        inputFile >> jsonArray;
-    } catch (const json::exception& e) {
-        std::cerr << "[ERROR] Failed to parse JSON: " << e.what() << "\n";
-        return;
-    }
-
-    if (!jsonArray.is_array() || jsonArray.empty()) {
-        std::cerr << "[ERROR] JSON file must contain an array of objects\n";
-        return;
-    }
-
-    std::vector<std::string> headers;
-    for (const auto& [key, _] : jsonArray[0].items()) {
-        headers.push_back(key);
-    }
-
-    // Write csv headers
-    for (size_t i = 0; i < headers.size(); i++) {
-        outputFile << headers[i];
-        if (i < headers.size() - 1) {
-            outputFile << ",";
-        }
-    }
-    outputFile << "\n";
-
-    // Write csv data
-    for (const auto& item : jsonArray) {
-        for (size_t i = 0; i < headers.size(); i++) {
-            std::string value = item.value(headers[i], "");
-            outputFile << "\"" << value << "\"";
-            if (i < headers.size() - 1) {
-                outputFile << ",";
-            }
-        }
-        outputFile << "\n";
-    }
-
-    inputFile.close();
-    outputFile.close();
-    std::cout << "[INFO] JSON converted to CSV: " << csvFilePath << "\n";
-}
-
-void TaskScheduler::convertCsvToJson(const std::string& csvFilePath,
-                                     const std::string& jsonFilePath) {
-    std::ifstream inputFile(csvFilePath, std::ios::in);
-    if (!inputFile.is_open()) {
-        std::cerr << "[ERROR] Failed to open file: " << csvFilePath << "\n";
-        return;
-    }
-
-    std::ofstream outputFile(jsonFilePath);
-    if (!outputFile.is_open()) {
-        std::cerr << "[ERROR] Failed to create output file: " << jsonFilePath << "\n";
-        return;
-    }
-
-    std::string line;
-    std::vector<std::string> headers;
-    json jsonArray;
-
-    // Read the header line
-    if (std::getline(inputFile, line)) {
-        std::stringstream ss(line);
-        std::string column;
-        while (std::getline(ss, column, ',')) {
-            headers.push_back(column);
-        }
-    }
-
-    // Read the data lines
-    while (std::getline(inputFile, line)) {
-        std::stringstream ss(line);
-        std::string value;
-        json jsonObject;
-
-        for (size_t i = 0; i < headers.size(); i++) {
-            if (!std::getline(ss, value, ',')) {
-                value = "";  // Handle missing values
-            }
-            jsonObject[headers[i]] = value;
-        }
-        jsonArray.push_back(jsonObject);
-    }
-
-    // write JSON to file
-    outputFile << jsonArray.dump(4);
-
-    inputFile.close();
-    outputFile.close();
-    std::cout << "[INFO] CSV converted to JSON: " << jsonFilePath << "\n";
 }
 
 void TaskScheduler::processTasks() {
-    while (running) {
+    while (true) {
         std::unique_lock<std::mutex> lock(queueMutex);
 
-        taskCondition.wait(lock, [this] { return !taskQueue.empty() || !running; });
+        // Wait until there's a task or we're stopping.
+        taskCondition.wait(lock, [this] { return !taskHeap.empty() || !running; });
+        if (!running && taskHeap.empty()) break;
 
-        while (!taskQueue.empty()) {
-            auto now = std::chrono::system_clock::now();
-            Task task = taskQueue.top();
+        auto now = std::chrono::system_clock::now();
 
-            if (task.executeAt > now) {
-                taskCondition.wait_until(lock, task.executeAt);
-                continue;
-            }
+        // The top element of the heap is at front.
+        if (taskHeap.front().executeAt > now) {
+            taskCondition.wait_until(lock, taskHeap.front().executeAt);
+            continue;
+        }
 
-            taskQueue.pop();
-            lock.unlock();
+        // Remove the top element from the heap.
+        std::pop_heap(taskHeap.begin(), taskHeap.end());
+        ScheduledTask scheduled = std::move(taskHeap.back());
+        taskHeap.pop_back();
+        lock.unlock();
 
-            if (task.type == TaskType::COMMAND) {
-                std::cout << "[INFO] Executing command: " << task.command << "\n";
-                int result = std::system(task.command.c_str());
-                if (result != 0) {
-                    std::cerr << "[ERROR] Command failed: " << task.command << "\n";
-                    Logger::getInstance().log("Task failed: " + task.command);
-                } else {
-                    Logger::getInstance().log("Task completed: " + task.command);
-                }
-            } else if (task.type == TaskType::FILE_PROCESS) {
-                std::cout << "[INFO] Processing file: " << task.filePath << "\n";
-                processFile(task.filePath);
-                Logger::getInstance().log("Processed file: " + task.filePath);
-            }
-
-            lock.lock();
+        auto taskToRun = std::move(scheduled.task);
+        if (taskToRun) {
+            taskToRun->run(logger);
         }
     }
 }
