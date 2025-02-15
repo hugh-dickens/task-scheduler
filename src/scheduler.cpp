@@ -1,16 +1,13 @@
 #include "scheduler.hpp"
+
 #include <algorithm>
 #include <chrono>
 #include <iostream>
 #include <thread>
 
-TaskScheduler::TaskScheduler(Logger& logger)
-    : logger(logger), running(true) {
-}
+TaskScheduler::TaskScheduler(Logger& logger) : logger(logger), running(true) {}
 
-TaskScheduler::~TaskScheduler() {
-    cleanup();
-}
+TaskScheduler::~TaskScheduler() { cleanup(); }
 
 void TaskScheduler::cleanup() {
     if (running) {
@@ -24,7 +21,7 @@ void TaskScheduler::cleanup() {
 
 void TaskScheduler::scheduleTask(std::unique_ptr<ITask> task, int delay) {
     auto executeTime = std::chrono::system_clock::now() + std::chrono::seconds(delay);
-    ScheduledTask scheduled{ executeTime, std::move(task) };
+    ScheduledTask scheduled{executeTime, std::move(task)};
 
     {
         std::lock_guard<std::mutex> lock(queueMutex);
@@ -57,8 +54,7 @@ void TaskScheduler::processTasks() {
 
         // Wait until there's a task or we're stopping.
         taskCondition.wait(lock, [this] { return !taskHeap.empty() || !running; });
-        if (!running && taskHeap.empty())
-            break;
+        if (!running && taskHeap.empty()) break;
 
         auto now = std::chrono::system_clock::now();
 

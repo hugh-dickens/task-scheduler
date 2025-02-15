@@ -1,13 +1,14 @@
 #pragma once
-#include "tasks.hpp"  // Contains ITask and Logger declarations
 #include <string>
 
+#include "tasks.hpp"  // Contains ITask and Logger declarations
+
 class FileConversionTask : public ITask {
-public:
+   public:
     explicit FileConversionTask(const std::string& filePath);
     void run(Logger& logger) override;
 
-private:
+   private:
     std::string filePath;
 
     void convertJsonToCsv(const std::string& jsonFilePath, const std::string& csvFilePath);

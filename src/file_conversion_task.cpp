@@ -1,15 +1,15 @@
 #include "file_conversion_task.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <json.hpp>
 #include <sstream>
 #include <vector>
-#include <json.hpp>
 
 using json = nlohmann::json;
 
-FileConversionTask::FileConversionTask(const std::string& filePath)
-    : filePath(filePath) {}
+FileConversionTask::FileConversionTask(const std::string& filePath) : filePath(filePath) {}
 
 void FileConversionTask::run(Logger& logger) {
     std::string fileExtension = std::filesystem::path(filePath).extension().string();

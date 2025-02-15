@@ -1,9 +1,9 @@
 #include "command_task.hpp"
+
 #include <cstdlib>
 #include <iostream>
 
-CommandTask::CommandTask(const std::string& cmd)
-    : command(cmd) {}
+CommandTask::CommandTask(const std::string& cmd) : command(cmd) {}
 
 void CommandTask::run(Logger& logger) {
     std::cout << "[INFO] Executing command: " << command << "\n";
