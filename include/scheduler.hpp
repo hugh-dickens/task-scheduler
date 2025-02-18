@@ -1,10 +1,15 @@
 #pragma once
 
 #include "tasks.hpp"
+#include "file_conversions/file_handler.hpp"
 #include <condition_variable>
+#include <functional>
+#include <memory>
 #include <mutex>
-#include <vector>
+#include <queue>
 #include <thread>
+#include <unordered_map>
+#include <vector>
 
 // Interface for scheduling tasks.
 class ITaskScheduler {
@@ -39,4 +44,6 @@ private:
     std::mutex queueMutex;
     std::condition_variable taskCondition;
     std::thread workerThread;
+
+    std::unordered_map<std::string, std::unique_ptr<IFileHandler>> fileHandlers;
 };
