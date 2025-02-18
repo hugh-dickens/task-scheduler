@@ -65,24 +65,26 @@ void TaskServer::handleClient(int clientSocket) {
     if (bytesRead > 0) {
         std::string request(buffer.data(), bytesRead);
         std::istringstream requestStream(request);
-        std::string taskType, taskInput, delayStr;
+        std::string taskType, taskInput, targetFormat, delayStr;
 
         if (std::getline(requestStream, taskType, '|') &&
-            std::getline(requestStream, taskInput, '|') && std::getline(requestStream, delayStr)) {
+            std::getline(requestStream, taskInput, '|') &&
+            std::getline(requestStream, targetFormat, '|') &&
+            std::getline(requestStream, delayStr)) {
             try {
                 int delay = std::stoi(delayStr);
 
                 if (taskType == "COMMAND") {
                     scheduler.scheduleTask(std::make_unique<CommandTask>(taskInput), delay);
                 } else if (taskType == "FILE_PROCESS") {
-                    scheduler.scheduleTask(std::make_unique<FileConversionTask>(taskInput), delay);
+                    scheduler.scheduleTask(
+                        std::make_unique<FileConversionTask>(taskInput, targetFormat), delay);
                 } else {
                     std::string response = "Invalid task type\n";
                     send(clientSocket, response.c_str(), response.size(), 0);
                     close(clientSocket);
                     return;
                 }
-
                 std::string response = "Task scheduled: " + taskInput + "\n";
                 send(clientSocket, response.c_str(), response.size(), 0);
             } catch (const std::exception& e) {

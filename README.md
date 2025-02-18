@@ -12,13 +12,13 @@ The project supports **Linux, Windows (via WSL)**. It has been tested on Windows
 ---
 
 ## Features
-- ✅ Multi-threaded task scheduler using priority queues.
-- ✅ TCP-based communication between client and server.
-- ✅ Executes system commands (e.g., `ls`, `echo Hello`) and file conversions (e.g. csv to JSON and reverse).
-- ✅ Uses `std::system()` to run commands.
-- ✅ Designed for scalability with separate client and server binaries.
-- ✅ Logging system for executed tasks. 
-- ✅ Secure command execution, denies root execution. Requires extension. 
+- Multi-threaded task scheduler using priority queues and mutex locks.
+- TCP-based communication between client and server. Client sends request, server executes:
+    - System commands (e.g., `ls`, `echo Hello`)
+    - File conversions (e.g. csv, json, xlsx). 
+- Designed for scalability with separate client and server binaries.
+- Logging system for executed tasks. 
+- Secure command execution, denies root execution.
 
 ---
 
@@ -38,6 +38,17 @@ The project supports **Linux, Windows (via WSL)**. It has been tested on Windows
 # Install required dependencies
 sudo apt update
 sudo apt install -y build-essential cmake clang-format clang-tidy cppcheck libgtest-dev googletest
+```
+
+This project uses OpenXLSX for file conversions. To install:
+```sh
+sudo apt-get install libpugixml-dev
+git clone https://github.com/troldal/OpenXLSX.git
+cd OpenXLSX
+mkdir build && cd build
+cmake ..
+make -j4
+sudo make install
 ```
 
 ### **Windows (Using WSL)**
